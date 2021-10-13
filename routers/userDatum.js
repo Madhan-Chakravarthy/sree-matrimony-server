@@ -6,7 +6,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-
+const path = require('path');
 const FILE_TYPE_MAP ={
     'image/png' : 'png',
     'image/jpeg' :'jpeg',
@@ -33,6 +33,14 @@ router.get(`/`,async (req,res)=>{
     res.send(userList);
 })
 
+//get image
+router.get('/public/upload/:file',async (req,res)=>{
+    let file = req.params.file;
+    let fileLocation = path.join(__dirname + '/' + '../public/upload',file);
+    console.log(fileLocation);
+    res.status(200).sendFile(`${fileLocation}`)
+})
+
 
 router.get('/:id',async (req,res)=>{
     const user = await UserData.findById(req.params.id).select('-passwordHash');
@@ -41,12 +49,13 @@ router.get('/:id',async (req,res)=>{
     }
     res.status(200).send(user);
 })
+
 router.post(`/`,upload.single('image'),(req,res)=>{
     const doesItContainFile = req.file;
     if(!doesItContainFile)
     res.status(500).json({message: 'NO Image found'})
     const fileName = req.file.filename;
-    const basePath = `${req.protocol}://${req.get('host')}/public/upload/`;
+    const basePath = `${req.protocol}://${req.get('host')}${process.env.API_URL}/users/public/upload/`;
    const userData = new UserData ({
        name: req.body.name,
        email: req.body.email,
